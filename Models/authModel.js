@@ -1,15 +1,20 @@
 const db = require(`../config/db`);
-const { generateToken, generateRefreshToken, generateReferralCode, generateUniqueReferralCode } = require(`../Utils/utils`);
+const {
+  generateToken,
+  generateRefreshToken,
+  generateReferralCode,
+  generateUniqueReferralCode,
+} = require(`../Utils/utils`);
 
 class Auth {
   static register(newUser) {
     return new Promise((resolve, reject) => {
-      const token = generateToken();
-      const refresh_token = generateRefreshToken();
+      // const token = generateToken();
+      // const refresh_token = generateRefreshToken();
       // generateReferralCode();
       // const referral_code = generateUniqueReferralCode();
       db.query(
-        "INSERT INTO users (first_name, last_name, email, phone, password, referral_code, country, token, refresh_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO users (first_name, last_name, email, phone, password, referral_code, country) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
           newUser.first_name,
           newUser.last_name,
@@ -17,9 +22,7 @@ class Auth {
           newUser.phone,
           newUser.password,
           newUser.referral_code,
-          newUser.country,
-          token,
-          refresh_token
+          newUser.country
         ],
         (err, result) => {
           if (err) reject(err);
@@ -42,20 +45,11 @@ class Auth {
     });
   }
 
-  // static findUserById(id) {
-  //   return new Promise((resolve, reject) => {
-  //     db.query("SELECT * FROM users WHERE ?? =?", ["id", id], (err, result) => {
-  //       if (err) reject(err);
-  //       resolve(result);
-  //     });
-  //   });
-  // }
-
   static handleReferral(referralCode) {
     return new Promise((resolve, reject) => {
       const companyId = 1;
       // const id = insertId;
-      console.log("Referral Code Received:", referralCode); 
+      console.log("Referral Code Received:", referralCode);
 
       if (referralCode) {
         // If referral code is provided, check for a matching user
@@ -73,7 +67,11 @@ class Auth {
                 [userId],
                 (err, result) => {
                   if (err) return reject(err);
-                  resolve({ result, userId, message: "Referral count updated for referrer" });
+                  resolve({
+                    result,
+                    userId,
+                    message: "Referral count updated for referrer",
+                  });
                 }
               );
             } else {
@@ -83,15 +81,21 @@ class Auth {
                 [companyId],
                 (err, result) => {
                   if (err) return reject(err);
-                  resolve({result, companyId, message:"Referral count updated for company"});
+                  resolve({
+                    result,
+                    companyId,
+                    message: "Referral count updated for company",
+                  });
                 }
               );
             }
           }
         );
-      } else if(!referralCode) {
+      } else if (!referralCode) {
         // If no referral code is provided, add to company account by default
-        console.log("No referral code provided, updating company referral count...");
+        console.log(
+          "No referral code provided, updating company referral count..."
+        );
         db.query(
           "UPDATE Users SET referral_count = referral_count + 1 WHERE id = ?",
           [companyId],
@@ -110,33 +114,52 @@ class Auth {
       }
     });
   }
-}; 
-//       } else {
-//         // If no referral code, add to company account by default
-//         db.query(
-//           "UPDATE Users SET referral_count = referral_count + 1 WHERE id = ?",
-//           [companyId],
-//           (err, result) => {
-//             if (err) return reject(err);
-//             resolve({result, companyId, message: "Referral count updated for company"});
-//           }
-//         );
-//       }
-//     });
-//   }
-// }
+  // static findByEmail = async (email) => {
+  //   const [rows] = await db.query("SELECT * FROM users WHERE ?? = ?", [
+  //     "email",
+  //     email,
+  //   ]);
+  //   return rows[0];
+  // };
+
+  static findByResetToken = async (token) => {
+    const rows = await db.query("SELECT * FROM users WHERE ?? = ?", [
+      "reset_token",
+      token,
+    ]);
+    return rows[0];
+  };
+
+  static updateResetToken = async (userId, token, expiration) => {
+    await db.query(
+      "UPDATE users SET reset_token = ?, reset_token_expiration = ? WHERE id = ?",
+      [token, expiration, userId]
+    );
+  };
+
+  static updatePassword = async (userId, password) => {
+    await db.query("UPDATE users SET password = ? WHERE id = ?", [
+      password,
+      userId,
+    ]);
+  };
+
+  static clearResetToken = async (userId) => {
+    await db.query(
+      "UPDATE users SET reset_token = NULL, reset_token_expiration = NULL WHERE ?? = ?",
+      ["id", userId]
+    );
+  };
+
+  static saveRefreshToken = async (userId, refreshToken) => {
+  
+    await db.query("INSERT INTO refresh_token (user_id, token) VALUES (?, ?)"),  
+    [userId, refreshToken],
+    (err, result) => {
+      if (err) reject(err);
+      resolve(result);
+    }
+  }
+}
 
 module.exports = Auth;
-
-// {
-//   "first_name": "",
-//   "last_name": "",
-//   "email": "",
-//   "phone": "",
-//   "password": "",
-//   "confirm_password": "",
-//   "referral_code": "",
-//   "country": ""
-//   }
-
-

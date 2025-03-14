@@ -17,5 +17,5 @@ app.use(bodyParser.json());
 app.use("/api/affint", authRoute);
 
 app.listen(3020, () => {
-    console.log("Server listening on port 3020");
+    console.log("Server listening on port 3020")
 })

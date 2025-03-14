@@ -5,6 +5,7 @@ require("dotenv").config();
 exports.checkIfUserExists = async (req, res, next) => {
   const { email } = req.body;
   const users = await User.findUserByEmail(email);
+  console.log("these are users", users)
   if (users.includes(email)) {
     return res.status(400).send({
       success: false,
@@ -42,29 +43,30 @@ catch (error) {
 // };
 
 //middleware to check if there is an access token to grant login access
-exports.tokenAuth = (req, res, next) => {
-  const token = req.header("Authorization")?.split(" ")[1]; // Bearer token
-  console.log(req.header);
-  console.log(req.header("Authorization")?.split(" "));
+// exports.tokenAuth = (req, res, next) => {
+//   const token = req.header("Authorization")?.split(" ")[1]; // Bearer token
+//   console.log("no token", token);
+//   console.log(req.header);
+//   console.log(req.header("Authorization")?.split(" "));
 
-  if (!token) {
-    return res.status(401).send({
-      success: false,
-      message: "Access denied! No token provided.",
-    });
-  }
+//   if (!token) {
+//     return res.status(401).send({
+//       success: false,
+//       message: "Access denied! No token provided.",
+//     });
+//   }
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    res.status(400).send({
-      success: false,
-      message: "Invalid token",
-    });
-  }
-};
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     req.user = decoded;
+//     next();
+//   } catch (err) {
+//     res.status(400).send({
+//       success: false,
+//       message: "Invalid token",
+//     });
+//   }
+// };
 
 // Middleware to handle refresh token
 exports.refreshTokenAuth = async (req, res, next) => {
